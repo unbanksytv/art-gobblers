@@ -20,6 +20,9 @@ contract Pages is ERC721("Pages", "PAGE"), VRGDA {
     ///@notice id of last mint
     uint256 internal currentId;
 
+    ///@notice
+    uint256 internal numMintedFromGoop;
+
     ///@notice base token URI
     string internal constant BASE_URI = "";
 
@@ -114,6 +117,7 @@ contract Pages is ERC721("Pages", "PAGE"), VRGDA {
         }
         goop.burn(msg.sender, price);
         _mint(msg.sender, ++currentId);
+        numMintedFromGoop++;
     }
 
     ///@notice set mint start timestamp for regular minting
@@ -134,7 +138,7 @@ contract Pages is ERC721("Pages", "PAGE"), VRGDA {
 
         return
             (currentId < numPagesSwitch)
-                ? getPrice(timeSinceStart, currentId)
+                ? getPrice(timeSinceStart, numMintedFromGoop)
                 : postSwitchPrice(timeSinceStart);
     }
 
@@ -144,7 +148,7 @@ contract Pages is ERC721("Pages", "PAGE"), VRGDA {
         view
         returns (uint256)
     {
-        int256 fInv = (PRBMathSD59x18.fromInt(int256(currentId + 1)) -
+        int256 fInv = (PRBMathSD59x18.fromInt(int256(numMintedFromGoop + 1)) -
             PRBMathSD59x18.fromInt(int256(numPagesSwitch))).div(
                 perPeriodPostSwitchover
             ) + switchoverTime;

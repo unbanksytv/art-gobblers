@@ -72,9 +72,19 @@ contract PagesTest is DSTest {
         pages.mintByAuth(user);
     }
 
-    //TODO: fix test once pricing parameters are in
-    // function testInsufficientBalance() public {
-    // }
+    function testInitialPrice() public {
+        pages.setMintStart(block.timestamp);
+        uint256 cost = pages.pagePrice();
+        uint256 expectedCost = 591; // computed offline
+        assertEq(cost, expectedCost);
+    }
+
+    function testInsufficientBalance() public {
+        pages.setMintStart(block.timestamp);
+        vm.prank(user);
+        vm.expectRevert(insufficientBalance);
+        pages.mint();
+    }
 
     function testSetIsDrawn() public {
         pages.setMintStart(block.timestamp);
@@ -96,9 +106,9 @@ contract PagesTest is DSTest {
         pages.setIsDrawn(1);
     }
 
-    function mintPage(address user) internal {
-        goop.mint(user, pages.pagePrice());
-        vm.prank(user);
+    function mintPage(address _user) internal {
+        goop.mint(_user, pages.pagePrice());
+        vm.prank(_user);
         pages.mint();
     }
 }
