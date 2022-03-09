@@ -69,7 +69,8 @@ contract VRGDA {
             initial;
         int256 numPeriods = PRBMathSD59x18.fromInt(int256(timeSinceStart)).div(
             dayScaling
-        ) +
+        ) -
+            timeShift +
             (
                 ((logisticScale).div(logistic_value) -
                     PRBMathSD59x18.fromInt(1)).ln().div(timeScale)
