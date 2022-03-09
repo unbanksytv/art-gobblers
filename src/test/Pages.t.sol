@@ -54,7 +54,7 @@ contract PagesTest is DSTest {
 
     function testRegularMint() public {
         pages.setMintStart(block.timestamp);
-        goop.mint(user, pages.pagePrice());
+        goop.mint(user, pages.mintCost());
         vm.prank(user);
         pages.mint();
         assertEq(user, pages.ownerOf(1));
@@ -88,7 +88,7 @@ contract PagesTest is DSTest {
 
     function testSetIsDrawn() public {
         pages.setMintStart(block.timestamp);
-        goop.mint(user, pages.pagePrice());
+        goop.mint(user, pages.mintCost());
         vm.prank(user);
         pages.mint();
         assertTrue(!pages.isDrawn(1));
@@ -99,16 +99,16 @@ contract PagesTest is DSTest {
 
     function testRevertSetIsDrawn() public {
         pages.setMintStart(block.timestamp);
-        goop.mint(user, pages.pagePrice());
+        goop.mint(user, pages.mintCost());
         vm.prank(user);
         pages.mint();
         vm.expectRevert(unauthorized);
         pages.setIsDrawn(1);
     }
 
-    function mintPage(address _user) internal {
-        goop.mint(_user, pages.pagePrice());
-        vm.prank(_user);
+    function mintPage(address user) internal {
+        goop.mint(user, pages.mintCost());
+        vm.prank(user);
         pages.mint();
     }
 }

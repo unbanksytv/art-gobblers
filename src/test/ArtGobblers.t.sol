@@ -12,7 +12,7 @@ import {LinkToken} from "./utils/mocks/LinkToken.sol";
 import {VRFCoordinatorMock} from "./utils/mocks/VRFCoordinatorMock.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 
-contract ArtGobblersTest is DSTest {
+contract ContractTest is DSTest {
     using Strings for uint256;
 
     Vm internal immutable vm = Vm(HEVM_ADDRESS);
