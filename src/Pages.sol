@@ -108,7 +108,7 @@ contract Pages is ERC721("Pages", "PAGE"), VRGDA {
         if (mintStart == 0 || block.timestamp < mintStart) {
             revert MintNotStarted();
         }
-        uint256 price = mintCost();
+        uint256 price = pagePrice();
         if (goop.balanceOf(msg.sender) < price) {
             revert InsufficientBalance();
         }
@@ -129,7 +129,7 @@ contract Pages is ERC721("Pages", "PAGE"), VRGDA {
     ///@notice calculate the mint cost of a page. If number of sales
     ///is below a pre-defined threshold, we use VRGDA pricing algorithm
     ///otherwise, we use the post-switch pricing formula
-    function mintCost() public view returns (uint256) {
+    function pagePrice() public view returns (uint256) {
         uint256 timeSinceStart = block.timestamp - mintStart;
 
         return
