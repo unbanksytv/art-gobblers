@@ -16,13 +16,17 @@ contract PagesTest is DSTest {
     address internal user;
     Goop internal goop;
     Pages internal pages;
+    uint256 mintStart;
 
     //encodings for expectRevert
     bytes insufficientBalance =
         abi.encodeWithSignature("InsufficientBalance()");
     bytes unauthorized = abi.encodeWithSignature("Unauthorized()");
+    bytes mintNotStarted = abi.encodeWithSignature("MintNotStarted()");
 
     function setUp() public {
+        //avoid starting at timestamp = 0 for ease of testing
+        vm.warp(block.timestamp + 1);
         utils = new Utilities();
         users = utils.createUsers(5);
         drawAuth = users[0];
@@ -34,7 +38,22 @@ contract PagesTest is DSTest {
         user = users[1];
     }
 
+    function testMintBeforeSetMint() public {
+        vm.expectRevert(mintNotStarted);
+        vm.prank(user);
+        pages.mint();
+    }
+
+    function testMintBeforeStart() public {
+        //set mint start in future
+        pages.setMintStart(block.timestamp + 1);
+        vm.expectRevert(mintNotStarted);
+        vm.prank(user);
+        pages.mint();
+    }
+
     function testRegularMint() public {
+        pages.setMintStart(block.timestamp);
         goop.mint(user, pages.mintCost());
         vm.prank(user);
         pages.mint();
@@ -58,6 +77,7 @@ contract PagesTest is DSTest {
     // }
 
     function testSetIsDrawn() public {
+        pages.setMintStart(block.timestamp);
         goop.mint(user, pages.mintCost());
         vm.prank(user);
         pages.mint();
@@ -68,10 +88,17 @@ contract PagesTest is DSTest {
     }
 
     function testRevertSetIsDrawn() public {
+        pages.setMintStart(block.timestamp);
         goop.mint(user, pages.mintCost());
         vm.prank(user);
         pages.mint();
         vm.expectRevert(unauthorized);
         pages.setIsDrawn(1);
+    }
+
+    function mintPage(address user) internal {
+        goop.mint(user, pages.mintCost());
+        vm.prank(user);
+        pages.mint();
     }
 }

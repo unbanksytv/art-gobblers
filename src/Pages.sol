@@ -104,8 +104,8 @@ contract Pages is ERC721("Pages", "PAGE"), VRGDA {
 
     ///@notice mint a page by burning goop
     function mint() public {
-        //mint has not yet started
-        if (mintStart == 0) {
+        //mint start has not been set, or mint has not started
+        if (mintStart == 0 || block.timestamp < mintStart) {
             revert MintNotStarted();
         }
         uint256 price = mintCost();
