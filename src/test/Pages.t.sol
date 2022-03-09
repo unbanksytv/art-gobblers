@@ -106,9 +106,9 @@ contract PagesTest is DSTest {
         pages.setIsDrawn(1);
     }
 
-    function mintPage(address user) internal {
-        goop.mint(user, pages.pagePrice());
-        vm.prank(user);
+    function mintPage(address _user) internal {
+        goop.mint(_user, pages.pagePrice());
+        vm.prank(_user);
         pages.mint();
     }
 }
