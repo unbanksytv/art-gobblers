@@ -81,8 +81,7 @@ contract ArtGobblers is ERC1155B, Auth(msg.sender, Authority(address(0))), VRFCo
 
     uint16 internal immutable requestConfirmations = 3;
 
-    /// @notice need two words, one for index and one for multiplier 
-    uint32 internal immutable numWords = 2;
+    uint32 internal immutable numWords = 1;
 
     uint64 internal immutable chainlinkSubscriptionId;
 
@@ -410,7 +409,7 @@ contract ArtGobblers is ERC1155B, Auth(msg.sender, Authority(address(0))), VRFCo
 
     function fulfillRandomWords(uint256, uint256[] memory randomWords) internal override {
         //shuffle gobblerId with random word
-        knuthShuffle(randomWords);
+        knuthShuffle(randomWords[0]);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -418,13 +417,13 @@ contract ArtGobblers is ERC1155B, Auth(msg.sender, Authority(address(0))), VRFCo
     //////////////////////////////////////////////////////////////*/
 
     /// @notice knuth shuffle random gobbler and select attributes 
-    function knuthShuffle(uint256[] memory randomWords) internal {
+    function knuthShuffle(uint256 randomSeed) public {
         unchecked {
 
             uint256 remainingSlots = LEGENDARY_GOBBLER_ID_START - lastRevealedIndex;
 
             // Randomly pick distance for swap.
-            uint256 distance = randomWords[0] % remainingSlots;
+            uint256 distance = randomSeed % remainingSlots;
 
             // Select swap slot, adding distance to next reveal slot.
             uint256 swapSlot = lastRevealedIndex + 1 + distance;
@@ -446,7 +445,11 @@ contract ArtGobblers is ERC1155B, Auth(msg.sender, Authority(address(0))), VRFCo
             getAttributesForGobbler[currentSlot].idx = swapIndex;
             getAttributesForGobbler[swapSlot].idx = currentIndex;
 
-            uint64 multiple = uint64(randomWords[1] % 128) + 1;
+            // Select random attributes for current slot:
+            //TODO: Should we split entropy from single word instead of rehashing?
+            randomSeed = uint256(keccak256(abi.encodePacked(randomSeed)));
+
+            uint64 multiple = uint64(randomSeed % 128) + 1;
 
             getAttributesForGobbler[currentSlot].stakingMultiple = multiple;
 
