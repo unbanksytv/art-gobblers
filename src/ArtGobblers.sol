@@ -15,6 +15,7 @@ import {GobblersERC1155B} from "./utils/GobblersERC1155B.sol";
 
 import {Goop} from "./Goop.sol";
 import {Pages} from "./Pages.sol";
+import {LockupVault} from "./LockupVault.sol";
 
 // TODO: UNCHECKED
 // TODO: events
@@ -32,6 +33,8 @@ contract ArtGobblers is GobblersERC1155B, LogisticVRGDA, VRFConsumerBase, ERC115
     Goop public immutable goop;
 
     Pages public immutable pages; // TODO: do we still wanna deploy and maintain from here? we dont interact with pages in this contract at all.
+
+    LockupVault public immutable vault;
 
     /*//////////////////////////////////////////////////////////////
                             SUPPLY CONSTANTS
@@ -185,6 +188,7 @@ contract ArtGobblers is GobblersERC1155B, LogisticVRGDA, VRFConsumerBase, ERC115
     constructor(
         bytes32 _merkleRoot,
         uint256 _mintStart,
+        address _vault,
         address _vrfCoordinator,
         address _linkToken,
         bytes32 _chainlinkKeyHash,
@@ -212,6 +216,7 @@ contract ArtGobblers is GobblersERC1155B, LogisticVRGDA, VRFConsumerBase, ERC115
 
         goop = new Goop(address(this));
         pages = new Pages(_mintStart, address(goop), msg.sender);
+        vault = LockupVault(_vault);
 
         goop.setPages(address(pages));
 
@@ -275,21 +280,10 @@ contract ArtGobblers is GobblersERC1155B, LogisticVRGDA, VRFConsumerBase, ERC115
                         MINT FOR AUTHORITY LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice allows authority to mint up to 15% of minted supply into lockup vault
-    /// TODO: BATCH MINT
+    /// @notice allows authority to mint up to 15% of minted supply into 
+    /// lockup vault 
     function mintForAuthority() public {
-        //numbers if we allowed mint
-        uint128 mintTotal = currentNonLegendaryId + 1;
-        uint128 mintByAuthority = numMintedByAuthority + 1;
-
-        // number minted by authority should never reach 15% of total mint
-        if ((mintByAuthority * 100) / mintTotal >= 15) {
-            revert Unauthorized();
-        }
-        ++numMintedByAuthority;
-
-        //mint directly to vault
-        _mint(address(vault), ++currentNonLegendaryId, "");
+        
     }
 
     /*//////////////////////////////////////////////////////////////
