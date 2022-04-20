@@ -1,15 +1,15 @@
-name: Gas Snapshot 
-on: 
+name: Gas Snapshot
+on:
   push:
-      # branches:
-      #   - master
+    # branches:
+    #   - master
 
-jobs: 
+jobs:
   Run-Snapshot:
     runs-on: ubuntu-latest
-    steps: 
+    steps:
       - uses: actions/checkout@v2
-     
+
       - name: Install Foundry
         uses: onbjerg/foundry-toolchain@v1
         with:
@@ -18,10 +18,10 @@ jobs:
       - name: Install dependencies
         run: forge install
 
-      - run: | 
-        forge snapshot
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git add .
-        git commit -m "snapshot"
-        git push
+      - run: |
+          forge snapshot
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "snapshot"
+          git push
