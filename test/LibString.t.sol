@@ -86,7 +86,19 @@ contract LibStringTest is DSTestPlus {
 
         assertEq(data, expected);
     }
+
+    function testIsWordAligned() public {
+        string memory str = LibString.toString(1);
+        bool isAligned;
+        assembly {
+            // check if the memory pointer of the string if a multiple of 32
+            isAligned := iszero(mod(str, 32))
+        }
+        assertTrue(isAligned);
+    }
 }
+
+
 
 function toStringOZ(uint256 value) pure returns (string memory) {
     if (value == 0) {
