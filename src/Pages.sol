@@ -163,7 +163,7 @@ contract Pages is PagesERC721, LogisticToLinearVRGDA {
         // URIs:
         string memory _baseUri
     )
-        PagesERC721(_artGobblers, "Pages", "PAGE")
+        PagesERC721(_artGobblers, "Toilet Paper", "TP")
         LogisticToLinearVRGDA(
             4.2069e18, // Target price.
             0.31e18, // Price decay percent.
@@ -220,6 +220,12 @@ contract Pages is PagesERC721, LogisticToLinearVRGDA {
         // We need checked math here to cause overflow
         // before minting has begun, preventing mints.
         uint256 timeSinceStart = block.timestamp - mintStart;
+
+        // XXX ONLY FOR TESTNET XXX
+        // XXX ONLY FOR TESTNET XXX
+        timeSinceStart *= 30;
+        // XXX ONLY FOR TESTNET XXX
+        // XXX ONLY FOR TESTNET XXX
 
         unchecked {
             // The number of pages minted for the community reserve
