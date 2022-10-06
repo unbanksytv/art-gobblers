@@ -8,8 +8,8 @@ contract DeployGoerli is DeployBase {
 
     address public immutable root = 0x1D18077167c1177253555e45B4b5448B11E30b4b;
 
-    ///2022-09-22T01:22:45+00:00
-    uint256 public immutable mintStart = 1663809768;
+    ///2022-10-06T05:58:35+00:00	
+    uint256 public immutable mintStart = 1665035915;
 
     string public constant gobblerBaseUri = "https://testnet.ag.xyz/api/nfts/gobblers/";
     string public constant gobblerUnrevealedUri = "https://testnet.ag.xyz/api/nfts/unrevealed";
