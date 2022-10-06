@@ -298,7 +298,7 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
         string memory _baseUri,
         string memory _unrevealedUri
     )
-        GobblersERC721("Art Gobblers", "GOBBLER")
+        GobblersERC721("Bart Bobblers", "BOBBLER")
         Owned(msg.sender)
         LogisticVRGDA(
             69.42e18, // Target price.
