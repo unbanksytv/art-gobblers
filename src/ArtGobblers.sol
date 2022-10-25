@@ -414,10 +414,8 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
 
         gobblerId = FIRST_LEGENDARY_GOBBLER_ID + numSold; // Assign id.
 
-        // If the gobbler id would be greater than the max supply, there are no remaining legendaries.
-        if (gobblerId > MAX_SUPPLY) revert NoRemainingLegendaryGobblers();
-
-        // This will revert if the auction hasn't started yet, no need to check here as well.
+        // This will revert if the auction hasn't started yet or legendaries
+        // have sold out entirely, so there is no need to check here as well.
         uint256 cost = legendaryGobblerPrice();
 
         if (gobblerIds.length < cost) revert InsufficientGobblerAmount(cost);
@@ -466,7 +464,7 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
             getUserData[msg.sender].gobblersOwned -= uint32(cost);
 
             // New start price is the max of LEGENDARY_GOBBLER_INITIAL_START_PRICE and cost * 2.
-            legendaryGobblerAuctionData.startPrice = uint120(
+            legendaryGobblerAuctionData.startPrice = uint128(
                 cost <= LEGENDARY_GOBBLER_INITIAL_START_PRICE / 2 ? LEGENDARY_GOBBLER_INITIAL_START_PRICE : cost * 2
             );
             legendaryGobblerAuctionData.numSold = uint128(numSold + 1); // Increment the # of legendaries sold.
@@ -482,14 +480,20 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
     /// @dev The price of a legendary gobbler decays as gobblers are minted. The first legendary auction begins when
     /// 1 LEGENDARY_AUCTION_INTERVAL worth of gobblers are minted, and the price decays linearly while the next interval of
     /// gobblers are minted. Every time an additional interval is minted, a new auction begins until all legendaries have been sold.
-    /// @return price of legendary gobbler, in terms of gobblers.
+    /// @dev Will revert if the auction hasn't started yet or legendaries have sold out entirely.
+    /// @return The current price of the legendary gobbler being auctioned, in terms of gobblers.
     function legendaryGobblerPrice() public view returns (uint256) {
         // Retrieve and cache various auction parameters and variables.
         uint256 startPrice = legendaryGobblerAuctionData.startPrice;
         uint256 numSold = legendaryGobblerAuctionData.numSold;
-        uint256 mintedFromGoo = numMintedFromGoo;
+
+        // If all legendary gobblers have been sold, there are none left to auction.
+        if (numSold == LEGENDARY_SUPPLY) revert NoRemainingLegendaryGobblers();
 
         unchecked {
+            // Get and cache the number of standard gobblers sold via VRGDA up until this point.
+            uint256 mintedFromGoo = numMintedFromGoo;
+
             // The number of gobblers minted at the start of the auction is computed by multiplying the # of
             // intervals that must pass before the next auction begins by the number of gobblers in each interval.
             uint256 numMintedAtStart = (numSold + 1) * LEGENDARY_AUCTION_INTERVAL;
@@ -513,7 +517,6 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Request a new random seed for revealing gobblers.
-    /// @dev Can only be called every 24 hours at the earliest.
     function requestRandomSeed() external returns (bytes32) {
         uint256 nextRevealTimestamp = gobblerRevealsData.nextRevealTimestamp;
 
@@ -538,7 +541,7 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
             // Lock in the number of gobblers to be revealed from seed.
             gobblerRevealsData.toBeRevealed = uint56(toBeRevealed);
 
-            // We want at most one batch of reveals every 24 hours.
+            // We enable reveals for a set of gobblers every 24 hours.
             // Timestamp overflow is impossible on human timescales.
             gobblerRevealsData.nextRevealTimestamp = uint64(nextRevealTimestamp + 1 days);
 
@@ -566,8 +569,13 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
     /// @notice Upgrade the rand provider contract. Useful if current VRF is sunset.
     /// @param newRandProvider The new randomness provider contract address.
     function upgradeRandProvider(RandProvider newRandProvider) external onlyOwner {
-        // Revert if waiting for seed, so we don't interrupt requests in flight.
-        if (gobblerRevealsData.waitingForSeed) revert SeedPending();
+        // Reset reveal state when we upgrade while the seed is pending. This gives us a
+        // safeguard against malfunctions since we won't be stuck waiting for a seed forever.
+        if (gobblerRevealsData.waitingForSeed) {
+            gobblerRevealsData.waitingForSeed = false;
+            gobblerRevealsData.toBeRevealed = 0;
+            gobblerRevealsData.nextRevealTimestamp -= 1 days;
+        }
 
         randProvider = newRandProvider; // Update the randomness provider.
 
@@ -763,7 +771,7 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
     /// @notice Calculate a user's virtual goo balance.
     /// @param user The user to query balance for.
     function gooBalance(address user) public view returns (uint256) {
-        // Compute the user's virtual goo balance by leveraging LibGOO.
+        // Compute the user's virtual goo balance using LibGOO.
         // prettier-ignore
         return LibGOO.computeGOOBalance(
             getUserData[user].emissionMultiple,
